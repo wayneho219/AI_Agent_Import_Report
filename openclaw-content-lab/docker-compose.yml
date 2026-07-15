@@ -1,0 +1,39 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  openclaw:
+    image: openclaw/openclaw:latest
+    depends_on:
+      - ollama
+    environment:
+      # OLLAMA_API_KEY=ollama-local is required for local/LAN Ollama hosts (any value works)
+      - OLLAMA_API_KEY=ollama-local
+    volumes:
+      - ./openclaw-workspace:/workspace
+      # Pre-configured openclaw.json sets models.providers.ollama.baseUrl → http://ollama:11434
+      # This replaces the original plan's OLLAMA_HOST env var, which OpenClaw does not support.
+      # See: https://docs.openclaw.ai/providers/ollama (Configuration section)
+      - ./openclaw-config:/root/.config/openclaw
+    tty: true
+    stdin_open: true
+
+  mock-web:
+    image: nginx:alpine
+    volumes:
+      - ./mock-web:/usr/share/nginx/html:ro
+
+  attacker-server:
+    build:
+      context: ./attacker-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./attacker-server:/app
+
+volumes:
+  ollama-data:
