@@ -8,8 +8,8 @@
         "timeoutSeconds": 300,
         "models": [
           {
-            "id": "qwen2.5:7b",
-            "name": "qwen2.5:7b",
+            "id": "gemma4-31b-fast:latest",
+            "name": "gemma4-31b-fast:latest",
             "input": ["text"]
           }
         ]
@@ -19,7 +19,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ollama/qwen2.5:7b"
+        "primary": "ollama/gemma4-31b-fast:latest"
       }
     }
   }
