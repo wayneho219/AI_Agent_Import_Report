@@ -1,23 +1,15 @@
 services:
-  ollama:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama-data:/root/.ollama
-    ports:
-      - "11434:11434"
-
   openclaw:
     image: openclaw/openclaw:latest
-    depends_on:
-      - ollama
+    extra_hosts:
+      # Routes host.docker.internal → host machine so openclaw can reach the host's Ollama
+      - "host.docker.internal:host-gateway"
     environment:
-      # OLLAMA_API_KEY=ollama-local is required for local/LAN Ollama hosts (any value works)
+      # Required for local/LAN Ollama hosts (any value works)
       - OLLAMA_API_KEY=ollama-local
     volumes:
       - ./openclaw-workspace:/workspace
-      # Pre-configured openclaw.json sets models.providers.ollama.baseUrl → http://ollama:11434
-      # This replaces the original plan's OLLAMA_HOST env var, which OpenClaw does not support.
-      # See: https://docs.openclaw.ai/providers/ollama (Configuration section)
+      # Pre-configured openclaw.json sets models.providers.ollama.baseUrl → http://host.docker.internal:11434
       - ./openclaw-config:/root/.config/openclaw
     tty: true
     stdin_open: true
@@ -34,6 +26,3 @@ services:
       - "8080:8080"
     volumes:
       - ./attacker-server:/app
-
-volumes:
-  ollama-data:

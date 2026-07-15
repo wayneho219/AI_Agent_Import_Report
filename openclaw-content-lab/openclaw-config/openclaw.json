@@ -2,7 +2,7 @@
   "models": {
     "providers": {
       "ollama": {
-        "baseUrl": "http://ollama:11434",
+        "baseUrl": "http://host.docker.internal:11434",
         "apiKey": "ollama-local",
         "api": "ollama",
         "timeoutSeconds": 300,
