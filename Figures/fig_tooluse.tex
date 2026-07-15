@@ -1,0 +1,46 @@
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  mainbox/.style={rectangle, rounded corners=6pt, fill=blue!12, draw=blue!50!black,
+                  text width=3.0cm, minimum height=1.2cm, align=center, font=\small\bfseries},
+  iobox/.style={rectangle, rounded corners=4pt, fill=green!9, draw=green!55!black,
+                text width=2.2cm, minimum height=1.0cm, align=center, font=\small},
+  toolbox/.style={rectangle, rounded corners=4pt, fill=orange!10, draw=orange!55!black,
+                  text width=2.4cm, minimum height=0.95cm, align=center, font=\scriptsize},
+  grplbl/.style={font=\scriptsize\bfseries, color=gray!60!black},
+  arr/.style={draw, thick, -latex},
+  retarr/.style={draw, thick, dashed, -latex, color=orange!65!black}
+]
+
+%% 背景先畫（z-order 最底）
+\fill[orange!5, rounded corners=6pt] (-0.1, -3.5) rectangle (11.6, -1.7);
+\node[grplbl] at (5.75, -1.87) {工具執行層（Tool Use）};
+
+%% 主流程節點
+\node[iobox]   (user) at (0.0,  0.5) {使用者\\指令};
+\node[mainbox] (llm)  at (5.0,  0.5) {LLM\\推理引擎};
+\node[iobox]   (out)  at (10.5, 0.5) {最終\\回覆};
+
+%% 工具節點
+\node[toolbox] (t1) at (1.2,  -2.6) {網路搜尋\\[2pt]{\tiny 即時資訊 / 網頁}};
+\node[toolbox] (t2) at (4.0,  -2.6) {讀寫檔案\\[2pt]{\tiny 文件 / 程式碼}};
+\node[toolbox] (t3) at (6.9,  -2.6) {執行程式碼\\[2pt]{\tiny Python / Shell}};
+\node[toolbox] (t4) at (9.6,  -2.6) {呼叫 API\\[2pt]{\tiny 郵件 / 資料庫}};
+
+%% 主流程箭頭
+\draw[arr] (user.east) -- (llm.west)
+    node[midway, above, font=\scriptsize, color=gray!60!black] {目標 / 任務};
+\draw[arr] (llm.east) -- (out.west)
+    node[midway, above, font=\scriptsize, color=gray!60!black] {完成任務};
+
+%% LLM → 工具層（呼叫，向下，實線）
+\draw[arr, color=blue!55!black, line width=1.2pt]
+    (5.5, -0.1) -- (5.5, -1.7)
+    node[midway, right, font=\scriptsize, color=blue!55!black] {呼叫工具};
+
+%% 工具層 → LLM（回傳，向上，虛線）
+\draw[retarr, line width=1.2pt]
+    (4.5, -1.7) -- (4.5, -0.1)
+    node[midway, left, font=\scriptsize, color=orange!70!black] {回傳結果};
+
+\end{tikzpicture}%
+}

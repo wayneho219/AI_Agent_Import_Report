@@ -1,0 +1,49 @@
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  ubox/.style={rectangle, rounded corners=4pt, fill=green!9, draw=green!50!black,
+               text width=1.8cm, minimum height=0.85cm, align=center, font=\small},
+  cbox/.style={rectangle, rounded corners=4pt, fill=gray!12, draw=gray!45,
+               text width=1.8cm, minimum height=0.85cm, align=center, font=\small},
+  abox/.style={rectangle, rounded corners=4pt, fill=blue!10, draw=blue!45!black,
+               text width=1.8cm, minimum height=0.85cm, align=center, font=\small},
+  wbox/.style={rectangle, rounded corners=4pt, fill=red!10, draw=red!45!black,
+               text width=1.8cm, minimum height=0.85cm, align=center, font=\small},
+  plbl/.style={font=\small\bfseries},
+  arr/.style={draw, thick, -latex},
+  albl/.style={font=\scriptsize, color=gray!60!black}
+]
+
+%% 背景先畫（寬度擴到 14.5 讓 AI Agent 有足夠間距）
+\fill[gray!8,  rounded corners=6pt] (-0.2, 2.2) rectangle (14.5, 4.1);
+\fill[blue!6,  rounded corners=6pt] (-0.2, 0.0) rectangle (14.5, 1.9);
+
+%% 分組標題
+\node[plbl, color=gray!55!black] at (7.15, 3.88) {ChatGPT};
+\node[plbl, color=blue!55!black] at (7.15, 1.68) {AI Agent};
+
+%% ChatGPT 流程（y = 3.05，三個框間距 4.2cm，對比 AI Agent 顯得更「空曠/簡單」）
+\node[ubox] (cu)   at (1.8,  3.05) {使用者};
+\node[cbox] (clm)  at (6.0,  3.05) {LLM};
+\node[cbox] (cans) at (10.2, 3.05) {文字回覆};
+
+\draw[arr] (cu.east)  -- (clm.west)  node[midway, above, albl] {問題};
+\draw[arr] (clm.east) -- (cans.west) node[midway, above, albl] {回答};
+
+\node[font=\scriptsize, color=gray!60!black] at (12.9, 3.05) {世界不變};
+
+%% AI Agent 流程（y = 0.90，五個框間距 2.8cm，現在框與框之間有明顯空白）
+\node[ubox] (au) at (1.4,  0.90) {使用者};
+\node[abox] (ag) at (4.2,  0.90) {AI Agent};
+\node[abox] (pl) at (7.0,  0.90) {自主規劃};
+\node[abox] (ex) at (9.8,  0.90) {工具執行};
+\node[wbox] (wl) at (12.6, 0.90) {環境改變};
+
+\draw[arr] (au.east) -- (ag.west) node[midway, above, albl] {目標};
+\draw[arr] (ag.east) -- (pl.west);
+\draw[arr] (pl.east) -- (ex.west);
+\draw[arr] (ex.east) -- (wl.west);
+
+\node[font=\scriptsize\bfseries, color=red!55!black] at (12.6, 0.13) {世界已改變！};
+
+\end{tikzpicture}%
+}

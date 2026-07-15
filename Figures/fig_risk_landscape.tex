@@ -1,0 +1,57 @@
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+  box/.style={rectangle, rounded corners=4pt, text width=3.4cm, minimum height=1.6cm, align=center, inner sep=6pt, font=\small},
+  atk/.style={box, fill=red!10, draw=red!50!black},
+  sys/.style={box, fill=orange!12, draw=orange!60!black},
+  cmp/.style={box, fill=blue!8, draw=blue!45!black},
+  grplbl/.style={font=\scriptsize\bfseries, text=gray!60!black}
+]
+
+% 背景分組（上排）
+\fill[red!5, rounded corners=6pt] (-0.25, 0.85) rectangle (11.15, 3.3);
+% 背景分組（下排左）
+\fill[orange!6, rounded corners=6pt] (-0.25, -2.0) rectangle (7.55, 0.35);
+% 背景分組（下排右）
+\fill[blue!5, rounded corners=6pt]  (7.45, -2.0) rectangle (11.15, 0.35);
+
+% 分組標籤
+\node[grplbl] at (5.45, 3.1)  {外部攻擊威脅};
+\node[grplbl] at (3.55, 0.15) {設計／使用風險};
+\node[grplbl] at (9.3,  0.15) {法規風險};
+
+% 上排：外部攻擊
+\node[atk] at (1.75, 2.05) {
+  \textbf{提示詞注入}\\[2pt]
+  外部內容操控 Agent\\[-1pt]
+  {\scriptsize\color{red!70!black}→ 情境一}
+};
+\node[atk] at (5.45, 2.05) {
+  \textbf{供應鏈攻擊}\\[2pt]
+  惡意套件植入後門\\[-1pt]
+  {\scriptsize\color{red!70!black}→ 情境二}
+};
+\node[atk] at (9.15, 2.05) {
+  \textbf{上下文操控}\\[2pt]
+  安全守則遭覆蓋\\[-1pt]
+  {\scriptsize\color{red!70!black}→ 情境三}
+};
+
+% 下排：系統性
+\node[sys] at (1.75, -1.0) {
+  \textbf{過度代理}\\[2pt]
+  超越授權自主執行\\[-1pt]
+  {\scriptsize\color{orange!80!black}→ 情境四}
+};
+\node[sys] at (5.45, -1.0) {
+  \textbf{資料外洩}\\[2pt]
+  憑證個資洩漏外部\\[-1pt]
+  {\scriptsize\color{orange!80!black}→ 情境一、二}
+};
+\node[cmp] at (9.15, -1.0) {
+  \textbf{合規風險}\\[2pt]
+  個資法規法律責任\\[-1pt]
+  {\scriptsize\color{blue!70!black}→ 全部情境}
+};
+
+\end{tikzpicture}
+}

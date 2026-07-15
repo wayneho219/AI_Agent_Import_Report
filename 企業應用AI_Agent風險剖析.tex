@@ -1,0 +1,1979 @@
+\documentclass[aspectratio=1610]{Common/MyCourseBeamer}
+
+\usepackage{csquotes}
+\addbibresource{Reference.bib}
+\usepackage{multicol}
+\usepackage{setspace}
+%\setbeamersize{text margin left=0.4cm,text margin right=0.4cm}
+%\setlength{\leftmargini}{0.3cm}
+
+\setbeamertemplate{itemize subsubitem}[ball]
+\setbeamertemplate{itemize subitem}[square]
+\setbeamertemplate{itemize item}{$\blacktriangleright$}
+
+\usepackage{multirow}
+\usepackage[hang,flushmargin]{footmisc}
+\usepackage{hyperref}
+\usepackage{changepage}
+\usepackage{environ}
+\usepackage{smartdiagram}
+
+\renewcommand{\figurename}{Fig.}
+\renewcommand{\tablename}{Table}
+
+\setbeamertemplate{bibliography item}[text]
+
+\def\figureautorefname{Fig.}
+\def\tableautorefname{Table}
+\setbeamertemplate{caption}[numbered]
+
+\usetikzlibrary{arrows,shapes,positioning,shadows,trees}
+\tikzstyle{line} = [draw, thick, -latex]
+
+\newtoggle{figure_grid}
+
+%\setbeamertemplate{frametitle}[default][left]
+%\setbeamertemplate{subsection in toc}[ball unnumbered]
+
+% Logo
+%\logo{\includegraphics[width=1.2cm]{Common/FCS_LAB_LOGO.png}}
+
+% 覆蓋背景浮水印
+%\backgroundsetup{contents={}}
+\usepackage{tikz}
+\usepackage{amssymb}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
+
+
+
+
+\title{企業應用 AI Agent 風險剖析}
+\subtitle[]{}
+\author[北科大資財系\\魏銪志]{國立臺北科技大學\\資訊與財金管理系/計算機與網路中心 \\
+	\textbf{魏銪志} \small{副教授/主任} \\
+	\scriptsize{CISSP, CISM, CISA, CRISC, CDPSE, CEH, CHFI}}
+\date{}
+
+
+%%%%%%%%
+%
+%    本文開始
+%
+%%%%%%%%
+
+\begin{document}
+
+\begin{frame}
+\maketitle
+\end{frame}
+
+\begin{frame}{}
+	
+\begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.9\textheight,width=\textwidth,keepaspectratio]{Figures/WhoAmI.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+	
+\end{frame}
+
+\begin{frame}{大綱}
+\tableofcontents[hideallsubsections]
+\end{frame}
+
+
+%----------------------------------------------------------------------
+\section{AI Agent 概論}
+
+\subsection{什麼是 AI Agent}
+
+\begin{frame}{從 ChatGPT 到 AI Agent}
+
+	\input{Figures/fig_chatgpt_vs_agent}
+
+	\vspace{0.4em}
+	\begin{block}{關鍵差異}
+		ChatGPT 告訴你「你可以這樣做」；AI Agent 直接幫你做了。
+	\end{block}
+
+\end{frame}
+
+
+\begin{frame}{AI Agent 的定義與範疇}
+
+	\begin{itemize}
+		\item \textbf{AI Agent} 是以大型語言模型（LLM）為核心推理引擎，能夠\alert{自主感知環境、規劃步驟並執行動作}的軟體系統
+
+		\item 與傳統自動化工具（如 RPA）的根本差異在於：
+			\begin{itemize}
+				\item \textbf{自主推理}：能理解模糊指令、動態決策，不依賴固定規則
+				\item \textbf{工具呼叫}：能主動呼叫外部 API、讀寫檔案、執行程式碼
+				\item \textbf{與真實環境互動}：對企業系統具有真實的讀取、寫入、刪除能力
+			\end{itemize}
+
+		\item AI Agent 涵蓋的範疇從企業自主部署的代理工具（如 OpenClaw、NemoClaw），到開發人員日常使用的 Coding Agent（如 Claude Code、GitHub Copilot）——\alert{兩者形態不同，但面對相同類型的資安風險}
+	\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}{Agentic AI的應用\cite{Sapkota:2026}}
+	
+\begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.8\textheight,width=0.99\textwidth,keepaspectratio]{Figures/AI_Agent_Applications.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+%AI Agent（人工智慧代理）在企業環境中的應用包括：(a) 客服支援與企業內部搜尋；(b) 電子郵件過濾與優先級排序；(c) 個性化內容推薦與基礎數據報表；以及 (d) 自主排程助理。每個範例都突顯了模組化 AI Agent 的整合，旨在跨營運工作流程與面向用戶的系統中，實現自動化、意圖理解以及自適應推理
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{Tool Use——Agent 如何真正「做事」}
+
+	\begin{itemize}
+		\item \textbf{Function Calling（工具呼叫）：}LLM 不只輸出文字，還能決定「現在要呼叫哪個工具、帶什麼參數」，並將工具回傳結果納入下一步推理
+	\end{itemize}
+
+	\vspace{0.3em}
+	\input{Figures/fig_tooluse}
+
+	\framebreak
+	\begin{itemize}
+		\item \textbf{實例：}「幫我整理上週的銷售資料並寄給主管」
+			\begin{enumerate}
+				\item Agent 讀取指定資料夾的 Excel 檔案
+				\item 執行 Python 腳本進行統計分析
+				\item 將結果寫入摘要文件
+				\item 呼叫 Email API 自動寄出
+			\end{enumerate}
+
+		\item \alert{重點：} Agent 的每一步操作都對真實環境產生影響，\textbf{這是它強大的地方，也是風險的根源}
+            \begin{itemize}
+                \item 最大的風險在於，"你/妳"為了讓他能用(或Troubleshooting)，先把可能的阻礙(安全機制)\textbf{先關掉}，然後測試可以用了之後，就忘了或根本沒想到你卸下了這些安全機制，並把它\textbf{啟用回來！}
+            \end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{AI Agent的三大核心特性}
+    \begin{itemize}
+        \setlength{\itemsep}{1em} % 增加項目之間的垂直間距，讓排版更美觀
+        \item \textbf{自主性 (Autonomy)}
+        \begin{itemize}
+            \item 最少的人為介入 (Minimal human intervention)
+        \end{itemize}
+        
+        \item \textbf{特定任務導向 (Task-Specificity)}
+        \begin{itemize}
+            \item 專注於明確且特定的任務 (Narrow, well-defined tasks)
+        \end{itemize}
+        
+        \item \textbf{反應性 (Reactivity)}
+        \begin{itemize}
+            \item 對環境變化做出回應 (Responding to changes)
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{AI Agent 的記憶機制}
+
+	\begin{description}[\textbf{工作記憶（中間步驟）}]
+		\item[\textbf{短期記憶（Context Window）}] 當次對話的完整歷史。關掉對話視窗就消失，長度有上限。
+		\item[\textbf{長期記憶（外部記憶檔）}] 寫入外部檔案（如 \texttt{MEMORY.md}）持久保存，下次啟動仍可讀取。\alert{可被覆寫——這是後面情境三攻擊的根源。}
+		\item[\textbf{工作記憶（中間步驟）}] 執行多步驟任務時的暫存狀態，任務完成後清除。
+	\end{description}
+
+	\vspace{0.4em}
+	\begin{block}{為什麼記憶機制很重要？}
+		安全守則通常寫入長期記憶——一旦被覆蓋，Agent 就失去行為約束。後面情境三會看到具體的攻擊方式。
+	\end{block}
+
+\end{frame}
+
+
+%----------------------------------------------------------------------
+\subsection{工具擴充生態系：CLI、MCP 與 Skill}
+
+\begin{frame}{AI Agent 如何與外部工具互動}
+
+	\begin{itemize}
+		\item AI Agent 擴充能力的方式主要有三種形態，由簡至複：
+			\begin{enumerate}
+            	\item \textbf{MCP}：透過標準化協議橋接外部服務，Agent 與工具解耦
+				\item \textbf{CLI Agent}：直接執行系統指令（bash、git、docker），不需要額外協議層
+
+				\item \textbf{Skill}：安裝打包好的行為指令包，擴充 Agent 的任務能力
+			\end{enumerate}
+
+		\item 三者可以\textbf{同時存在}於同一個 Agent 上，且都讓 Agent 具備對外部環境的真實操作能力
+
+		\item \alert{共同的風險本質:} 無論透過哪種形態，攻擊者都可能借此操控 Agent 執行非預期動作
+	\end{itemize}
+
+\end{frame}
+
+
+
+
+
+\begin{frame}{MCP 核心概念}
+
+	\begin{itemize}
+		\item \textbf{問題背景：}每個 AI Agent 都要自己寫一套連接外部工具的程式碼，重複、不相容、維護成本高
+
+		\item \textbf{MCP（Model Context Protocol）：}Anthropic 提出的開放協議，標準化 AI Agent 與外部工具之間的溝通方式
+
+		\item \textbf{架構：}
+			\begin{center}
+				AI Agent（MCP Client）$\longleftrightarrow$ MCP Server $\longleftrightarrow$ 外部資源
+			\end{center}
+
+		\item \textbf{類比：}就像 USB 讓任何設備都能插上任何電腦——MCP 讓任何工具都能接上任何 Agent
+
+		\item 目前已有數百個 MCP Server 可用：GitHub、Google Drive、Slack、資料庫、瀏覽器控制...
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{MCP 生態系}
+
+	\begin{itemize}
+		\item \textbf{官方工具：}Anthropic、Microsoft、Google 等大廠提供，通常經過一定程度的審查
+
+		\item \textbf{社群工具：}任何開發者都可以發布 MCP Server，數量龐大、增長快速，\alert{無強制集中審查機制}
+
+		\item \textbf{安裝方式：}使用者在 Agent 設定中加入 MCP Server 位址，即可使用
+
+		\item \textbf{執行權限：}MCP Server 執行時，擁有與 Agent 相同的系統存取權限
+
+		\item \textbf{實際應用範例：}
+			\begin{itemize}
+				\item 讓 Claude Code 直接讀取公司的 Jira 票券
+				\item 讓 AI Agent 查詢內部 PostgreSQL 資料庫
+				\item 讓 Agent 控制瀏覽器自動填表
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}{CLI Agent：直接操作系統的代理工具}
+
+	\begin{itemize}
+		\item \textbf{運作方式：}Agent 直接呼叫作業系統的指令工具(如bash、git、curl、docker 等)不透過任何協議層
+
+		\item \textbf{典型範例：}Claude Code、GitHub Copilot CLI、Cursor Agent
+
+		\item \textbf{與 MCP 的差異：}
+			\begin{itemize}
+				\item MCP 需要先定義工具 schema 再透過協議呼叫
+				\item CLI Agent 直接在 shell 執行，彈性更高，但\alert{稽核與限制也更困難}
+			\end{itemize}
+
+		\item \textbf{資安意涵：}
+			\begin{itemize}
+				\item 攻擊者若能操控 CLI Agent，等同於取得執行 shell 指令的能力
+				\item 防禦重點在於\textbf{限制可執行指令的白名單}與\textbf{容器化隔離}
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks=0.85]{Skill 技能包}
+
+	\begin{itemize}
+		\item \textbf{Skill 是什麼：}針對特定 Agent 平台打包的能力模組——把自然語言指令、工具呼叫規則、行為邏輯打包成可安裝的套件
+
+		\item \textbf{Skill 裡面裝什麼：}
+			\begin{itemize}
+				\item \textbf{自然語言指令：}告訴 Agent「遇到這種請求要這樣做」
+				\item \textbf{工具呼叫規則：}定義可使用哪些 MCP 工具、何時呼叫
+				\item \textbf{觸發條件：}什麼情況下啟動這個技能
+			\end{itemize}
+
+		\framebreak
+		\item \textbf{與 MCP 的差異：}
+			\begin{itemize}
+				\item MCP 是連接的\textbf{協議}（管道）
+				\item Skill 是打包的\textbf{能力}（管道裡流通的東西）
+				\item Skill 可以內嵌 MCP 工具，但危險性在於\alert{指令層面}——攻擊者直接操控 Agent 的行為邏輯，不只是工具層面
+			\end{itemize}
+
+		\item 安裝後立即生效，執行時擁有與 Agent 相同的完整權限
+		\item \textbf{常見範例：}天氣查詢、行事曆管理、Email 整理、程式碼審查
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{三種形態比較：攻擊面與稽核難度}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+		\toprule
+		 & \textbf{CLI Agent} & \textbf{MCP} & \textbf{Skill} \\
+		\midrule
+		典型範例 & Claude Code、Copilot CLI & GitHub MCP、資料庫 MCP & 天氣查詢、Email 整理 \\
+		\midrule
+		攻擊面 & 任意系統指令皆可被濫用 & 受 MCP Server 範圍限制 & 指令層面，難以靜態偵測 \\
+		\midrule
+		稽核難度 & 高 \newline（shell 指令多樣） & 中 \newline（API 呼叫可記錄） & 高 \newline（自然語言指令） \\
+		\midrule
+		防禦重點 & 指令白名單 \newline 容器隔離 & 套件來源審查 & 指令內容人工審閱 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	{\small 三種形態面對\alert{相同類型}的資安風險，後續分層防護建議涵蓋全部形態。}
+
+\end{frame}
+
+
+\begin{frame}{開放生態系的雙面刃}
+
+	\begin{columns}[T]
+		\column{0.42\linewidth}
+		\textbf{帶來的優勢}
+		\begin{itemize}
+			\item 生態系快速成長
+			\item 功能豐富多元
+			\item 開發門檻低，創新快
+			\item 社群貢獻加速進步
+		\end{itemize}
+
+		\column{0.55\linewidth}
+		\textbf{帶來的風險}
+		\begin{itemize}
+			\item 任何人都能發布，\alert{無強制審查}
+			\item MCP Server 擁有 Agent 完整權限
+			\item Skill 內的指令內容無人稽核
+			\item 惡意套件可偽裝成正常功能
+		\end{itemize}
+	\end{columns}
+
+	\vspace{0.4em}
+	\begin{block}{實測案例}
+		情境二將呈現：一個偽裝成天氣查詢的惡意 Skill，在使用者毫不知情的情況下竊取了完整的系統憑證。
+	\end{block}
+
+\end{frame}
+
+\section{人工智慧安全與風險}
+
+\begin{frame}[allowframebreaks]{AI系統應全面思考非獨立存在}
+	
+	\begin{itemize}
+		\item 組織需要思考如何設計AI 系統所建立的\textbf{業務流程}與\textbf{資料流}，以降低可能因資安失效所造成的商業衝擊
+		
+		\item 當AI系統本身的資安保護或防禦機制的有效性尚無法完全確保時，特別需要思考在遭受攻擊或受損時，應如何\textbf{因應與補救}：
+			\begin{itemize}
+				\item 包括在 AI 系統之外實施額外的\textbf{控制措拖}
+				
+				\item 檢視哪些資料應該或不應該揭露給 AI 系統進行處理
+			\end{itemize}
+		
+
+		\item \textbf{風險與控制機制}應\textbf{整合}進組織更廣泛的\textbf{治理架構}與\textbf{企業風險管理流程中}
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}[allowframebreaks]{AI遭入侵或濫用可能的負面影響}
+	
+	\begin{itemize}
+		\item 產品本身內建\textbf{偏見}，導致\textbf{公平性}不足
+		\item AI 模型\textbf{缺乏可解釋性}，降低人為審查與監督的可能性
+		\item 輸出結果不穩定，導致使用者\textbf{信任度下降}，並妨礙系統穩定性驗證
+		\item 新增可被利用的\textbf{攻擊面}，且相關防護措施不足
+		\item 透過生活模式推演，引發\textbf{個資外洩}的隱私風險
+		\item \textbf{機密資料可能因不慎被納入 AI 訓練資料而外洩}
+	\end{itemize}
+	
+\end{frame}
+
+
+
+
+\begin{frame}[allowframebreaks]{AI 系統部署前應自問的六大問題}
+	
+	\begin{itemize}
+		\item 我們是否已設定\textbf{明確的 AI 風險胃納}？所有\textbf{風險擁有者}是否都瞭解？
+		\item 在評估新 AI 專案時，是否有\textbf{妥善平衡其風險與潛在效益}？
+		\item 是否有\textbf{有效流程}來\textbf{管理並追蹤 AI 專案}的部署進度與狀況？
+		\item 我們是否\textbf{明確瞭解}組織在導入或應用 AI 技術過程中，所\textbf{可能面臨的資安弱點與風險}？
+		\item 我們是否已\textbf{明確界定}，在 AI 導入過程中哪些\textbf{內部利害關係人需要參與風險評估與緩解}？
+		\item 是否已\textbf{建立有效的驗證與稽核機制}，以確保 AI 專案符合\textbf{企業整體政策與合規要求}(例如資料保護、健康與安全法規等)？
+	\end{itemize}
+	
+\end{frame}
+
+\subsection{資料洩露}
+
+
+\begin{frame}[allowframebreaks]{資料洩露}
+	
+	\begin{itemize}
+		\item GenAI平台可能無意中將敏感資料\textbf{曝露至組織網路範圍外}
+		
+		%\item 傳統DLP解決方案會識別和防止不安全或不適當的共享、傳輸或使用文字、檔案、電子郵件或資料來源中的敏感資訊
+		
+		\item 傳統的DLP模型倚賴\textbf{識別符}來識別資料元素，如地址、電話號碼或其他個人識別資訊(PII)
+		\begin{itemize}
+			\item 忽略了\textbf{關鍵的業務敏感資訊}，如\textbf{收入數字}、\textbf{客戶帳戶}、\textbf{薪資詳細資訊}、\textbf{專案所有權細節}和商業關係等等
+		\end{itemize}
+		
+		\item 使用GenAI平台\textbf{無意中洩漏業務敏感資訊}是被廣泛承認的問題
+		\begin{itemize}
+			\item GenAI平台使用者協議可能未明確排除使用提示資料訓練未來的模型，業務敏感資訊和PII可能會洩漏給外部使用者
+		\end{itemize}
+		
+		\item 沒有AI DLP無法察覺超出組織網路的PII和企業PII洩漏
+		\begin{itemize}
+			\item 敏感資料外洩造成的損害往往在洩漏發生後很久才顯現出來，並可能造成聲譽、財務、競爭甚至法律影響...
+			
+			\item 可透過AI DLP解決方案，例如：Patronus AI評估GenAI模型的性能，以防止PII和組織敏感資料的洩漏等等 \href{https://www.ithome.com.tw/news/161674}{iThome, 2024/03/08}
+		\end{itemize}
+		
+		
+	\end{itemize}
+	
+\end{frame}
+
+\begin{frame}[allowframebreaks]{可考量的風險緩解措施}
+	
+	\begin{itemize}
+		\item \textbf{AI風險培訓：} 
+			\begin{itemize}
+				\item 前面討論類似，讓同仁了解在使用GenAI平台時洩露敏感資訊的危險，可減少DLP問題
+			\end{itemize}
+		
+		\item \textbf{多層DLP解決方案：}
+			\begin{itemize}
+				\item 組織可以透過結合傳統的DLP解決方案來保護PII，並利用現代DLP來檢測企業PII的洩露，大大減少外洩到外部平台的資料
+			\end{itemize}
+		 
+		
+		\item \textbf{訓練資料外洩測試：} 
+			\begin{itemize}
+				\item 對於部署自定義LLM的組織，需要進行專門的DLP測試，以確保敏感的訓練資料不會被外洩 
+			\end{itemize}
+		
+		\item \textbf{部署後監控：} 
+			\begin{itemize}
+				\item 在訓練和微調的模型部署到生產環境後，應進行監控，以便在PII或企業PII暴露時發出警報
+			\end{itemize}
+	\end{itemize}
+	
+\end{frame}
+
+\subsection{專有的LLMs}
+
+\begin{frame}[allowframebreaks]{專有的LLMs}
+	
+	\begin{itemize}
+		\item 建立一個能解決有用業務案例的AI模型不容易，需要高品質的資料、負責任的訓練、用心的微調和安全的部署
+		\begin{itemize}
+			\item 許多組織還沒有具備完成這些工作的\textbf{技能}、\textbf{工具}和\textbf{資料}
+		\end{itemize}
+		
+		\item \textbf{害怕錯失機會或被競爭對手超越}，使許多企業組織嘗試商業或開源的AI平台
+		\begin{itemize}
+			\item 員工常使用內部或開源的生成式AI工具來開發概念驗證原型，希望雇主能看到足夠的價值並大規模佈署
+		\end{itemize}
+		
+		\item 常見的LLM實作模式是\textbf{下載開源的預訓練LLM}(如HuggingFace、LLaMa或Mistral)，然後用專有資料集(如客戶記錄、內部文件、銷售資料等等)進行微調
+		
+		\framebreak
+		
+		\begin{figure}
+		\begin{center}
+			\begin{tikzpicture}
+				\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.7\textheight,width=0.9\textwidth,keepaspectratio]{Figures/Generic_LLM-based_system.png}};
+				\begin{scope}[x={(image.south east)},y={(image.north west)}]
+					% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+					% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+					% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+					\iftoggle{figure_grid}{
+						\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+						\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+						\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+					}{}
+				\end{scope}
+			\end{tikzpicture}
+		\end{center}
+			\caption{簡單的LLM系統流程\cite{Buchicchio2024}}
+		\end{figure}
+		\framebreak
+		
+		\item 專有LLM通常通過檢索增強生成(RAG)架構擴展，該架構即時檢索外部資料以增強生成的輸出
+			\begin{itemize}
+				\item RAG啟用的LLM透過補充模型以更新的資料，有更高的準確性
+				%\item 採用RAG架構提供了更強的透明性和可觀測性
+			\end{itemize}
+		
+		\item 在追求專有LLM的潛在創新時，許多自發的努力並未考慮生成式AI模型帶來的風險
+		\begin{itemize}
+			\item 例如偏見或歧視性結果、不準確或有害的輸出，或易受對抗性攻擊的模型
+			
+			\item 生成式AI團隊中很少包括倫理專家，因此在部署有爭議的AI模型後，可能會無意中引發客戶的強烈反應
+		\end{itemize}
+		
+		\item 一些組織已部署了對某些群體存在歧視的AI工具。目前AI法規仍處於初期階段，請大家多多小心！
+		
+		\item \textbf{\color{darkred}
+			{歐盟人工智慧法(EU AI Act)的透過會對人工智慧系統的提供者有一個監管和法律框架}}
+		
+		\item 在我們擁有負責但靈活的防護來引導生成式AI模型的輸出之前，減少其風險通常是事後才被考慮的
+	\end{itemize}
+	
+\end{frame}
+
+\subsection{AI資安}
+
+\begin{frame}[allowframebreaks]{AI資安}
+	
+	\begin{itemize}
+		\item 許多組織\textbf{未考慮}到AI應用帶來的新攻擊方向的曝露
+		\begin{itemize}
+			\item 大多數大型企業組織擁有強大的安全產品、流程和人員來應對\textbf{傳統攻擊}
+		\end{itemize}
+		
+		
+		\item 許多網路安全團隊假設可以將這些\textbf{傳統方法}直接應用於AI應用
+		\begin{itemize}
+			\item 但是，\textbf{幾乎不可能使用傳統的基於功能的平台來保護AI模型}
+		\end{itemize}
+		
+		\item 要建立一種現代的AI安全方法，可以從AI模型的典型生命週期中獲得啟示
+		\begin{itemize}
+			\item 儘管開發和部署過程有很大差異，典型的AI模型會經歷兩個主要階段，每階段都有獨特且不斷變化的攻擊面
+		\end{itemize}
+		
+	\end{itemize}
+	
+	%	\begin{center}
+		%		\begin{tikzpicture}
+			%			\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.7\textheight,width=0.99\textwidth,keepaspectratio]{figures/AI_Lifecycle_AttacksAndSecurity.png}};
+			%			\begin{scope}[x={(image.south east)},y={(image.north west)}]
+				%				% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+				%				% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+				%				% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+				%				\iftoggle{figure_grid}{
+					%					\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+					%					\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+					%					\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+					%				}{}
+				%			\end{scope}
+			%		\end{tikzpicture}
+		%	\end{center}
+	
+\end{frame}
+
+
+
+%----------------------------------------------------------------------
+\section{威脅情境分析}
+
+%\subsection{攻擊者視角}
+
+\begin{frame}{誰在攻擊 AI Agent？}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{2.2cm}p{2.0cm}X}
+		\toprule
+		攻擊者類型 & 動機 & 目標 \\
+		\midrule
+		\textbf{犯罪組織} & 金錢 & 竊取憑證、Token、客戶資料，用於變現或勒索 \\
+		\midrule
+		\textbf{競爭對手} & 商業情報 & 透過 Coding Agent 取得程式碼、設計文件、商業計畫 \\
+		\midrule
+		\textbf{內部人員} & 個人目的 & 借助 Agent 高權限執行越權操作，以「AI 決定的」為掩護 \\
+		\midrule
+		\textbf{供應鏈攻擊者} & 規模觸達 & 在 MCP 工具或技能包植入後門，一次觸達所有安裝的企業 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+\end{frame}
+
+
+\begin{frame}{為何 AI Agent 是理想攻擊目標？}
+
+	\begin{itemize}
+		\item \textbf{天然高權限代理：}Agent 通常以開發者身份執行，可讀寫檔案、呼叫 API、存取憑證——攻擊者不需要自己提權
+
+		\item \textbf{攻擊面是「內容」而非「漏洞」：}不需要 CVE、不需要 0-day，只需讓 Agent 讀到一段惡意文字即可觸發
+
+		\item \textbf{傳統防禦工具失效：}WAF 無法辨識語義層的指令注入；IDS 看到的只是正常的 API 呼叫與 HTTP 請求
+
+		\item \textbf{規模化潛力極高：}一個惡意 MCP 工具可同時影響所有安裝的企業，攻擊邊際成本趨近於零
+
+		\item \textbf{行為難以歸因：}攻擊透過「正常的 Agent 操作」執行，無惡意程式特徵，難以與合法行為區分
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}{AI Agent風險特性不同於傳統軟體？}
+
+	\begin{itemize}
+		\item 傳統軟體的行為由程式碼決定，可完整預測與稽核
+		\item Agent 的行為由模型推理決定，\alert{同樣的輸入不保證同樣的行動}
+		\item 攻擊者可透過操控\textbf{輸入內容}（而非漏洞利用）改變 Agent 的行為
+		\item \alert{使用者往往無從察覺} Agent 在回覆正常結果的同時已在背景執行惡意操作
+		\item Tool Use 與開放生態系 (MCP/Skill) 進一步擴大了攻擊面：\\
+        \textbf{任何 Agent 能做的事，攻擊者都能借 Agent 之手來做}
+	\end{itemize}
+
+\end{frame}
+
+
+\subsection{AI Agent的風險全景}
+
+\begin{frame}{AI Agent 風險全景}
+
+\input{Figures/fig_risk_landscape}
+
+\vspace{0.3em}
+{\small 本報告深入分析\alert{全部四項威脅情境}；前三項以 NICS 實測數據為核心佐證，情境四為設計層面風險。}
+
+\end{frame}
+
+
+%\subsection{實測背景}
+
+\begin{frame}[allowframebreaks=0.85]{實測背景說明}
+
+	\begin{block}{核心實測佐證}
+		本節以\textbf{國家資通安全研究院}（NICS）於中華民國 115 年 5 月發布之《OpenClaw 與 NemoClaw 資安檢測報告》\cite{nics2026}作為核心實測依據，針對以下兩款 AI 代理工具進行三項威脅情境實測。本報告同時參照 OWASP Top 10 for LLM Applications（2025）\cite{owasp2025}框架與業界已知案例，作為補充佐證。
+	\end{block}
+    \WebLinkURLBox{OpenClaw與NemoClaw資安檢測報告}{https://www.nics.nat.gov.tw/latest_news/announcements/Latest_Announcement/58756447-b350-4bbe-88cc-c994b5549acf/}
+
+    \WebLinkURLBox{OWASP Top 10 for LLM Applications 2025}{https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/}
+
+    
+    
+    
+\end{frame}
+
+\begin{frame}[allowframebreaks=0.85]{OpenClaw: 開源個人代理人標竿}
+    \begin{itemize}
+        \item 定位：本地優先的開源個人 AI 助理
+        \item 架構：Node.js ，包含 Gateway 與適配器
+        \item 特色：數據儲存於本地 Markdown，支持 WhatsApp/Telegram
+    \end{itemize}
+    % 此處可插入 OpenClaw Logo 圖片
+    \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.4\textheight,width=0.99\textwidth,keepaspectratio]{Figures/openclaw-hero-dark.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}[allowframebreaks=0.85]{NemoClaw: 企業級執行框架}
+    \begin{itemize}
+        \item 定位：NVIDIA 推出的生產級代理人治理平台
+        \item 安全：基於 OpenShell 的沙盒執行環境
+            \begin{itemize}
+                \item \textbf{自主沙盒（Sandboxing）：} 獨立且隔離的容器或微型虛擬機環境
+                \item \textbf{YAML 政策：} YAML限制 AI 代理人行為
+                \item \textbf{全程記錄：} 記錄AI的每一次意圖、調用與決策
+            \end{itemize}
+        %\item 優勢：10倍成本優化（配合 Nemotron 模型）
+    \end{itemize}
+    % 此處可插入 NemoClaw Logo 圖片
+        \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.4\textheight,width=0.99\textwidth,keepaspectratio]{Figures/NemoClaw_LOGO.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+\end{frame}
+    
+\begin{frame}[allowframebreaks=0.85]{資安院實測背景說明}
+	\begin{itemize}
+		\item \textbf{OpenClaw}：未具備特殊防護措施的 AI 代理工具，代表一般未加固部署情境
+		\item \textbf{NemoClaw}：以 OpenShell 實作網路隔離機制的 AI 代理工具，採\textbf{預設拒絕(Deny-by-default)白名單網路政策}
+
+		\item 三項威脅情境：
+			\begin{enumerate}
+				\item 惡意指令可能出現在外部網頁
+				\item 第三方技能包暗藏惡意程式
+				\item 長時間運作導致安全守則遺失
+			\end{enumerate}
+
+		\item \textbf{整體結果：}OpenClaw 於三項情境皆未能有效防禦；NemoClaw 於情境一、二成功阻斷，\alert{但情境三兩者皆失敗}
+	\end{itemize}
+
+\end{frame}
+
+
+\subsection{情境一：外部網頁藏惡意指令}
+
+\begin{frame}[allowframebreaks=0.85]{情境一：威脅說明}
+
+	\begin{itemize}
+		\item \textbf{威脅類型：}間接提示詞注入(Indirect Prompt Injection)
+
+		\item \textbf{攻擊前提：}AI Agent 被要求讀取或摘要外部網頁內容時，若網頁中暗藏攻擊者預置的惡意指令，Agent 無法在語義層面區分「網頁資料」與「操控指令」
+
+        \item \textbf{情境描述：}AI Agent在\textbf{瀏覽外部網頁}或\textbf{讀取真實世界的社群留言}時，若內容中暗藏攻擊者預藏之惡意指令，AI代理有可能執行\textbf{讀取檔案}、\textbf{刪除檔案}及\textbf{竄改系統設定}等危險操作
+
+        \framebreak
+        
+        \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.65\textheight,width=0.99\textwidth,keepaspectratio]{Figures/S1_NICS_IndirectPromptInjection.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+        \framebreak
+		\item \textbf{實測攻擊鏈：}
+			\begin{enumerate}
+				\item 使用者透過 Telegram 委託 Agent 讀取外觀正常的外部網頁
+				\item Agent 呼叫工具取得網頁原始碼，觸發隱藏其中的注入指令
+				\item 注入指令分三段執行：
+					\begin{itemize}
+						\item 讀取機敏憑證檔案，複製至新檔案備份
+						\item 執行 \texttt{whoami} 取得使用者身份，刪除指定日誌檔
+						\item 將身份與憑證嵌入URL，透過\texttt{wget}外洩至攻擊者伺服器
+					\end{itemize}
+				\item Agent 將正常網頁摘要回覆給使用者，\alert{使用者全程無從察覺}
+				\item Telegram 之 Link Preview 機制自動對含機敏資訊的 URL 發起 HTTP 請求，形成\textbf{零點擊外洩管道}
+			\end{enumerate}
+	\end{itemize}
+
+        \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.15\textheight,width=0.99\textwidth,keepaspectratio]{Figures/S1_NICS_IndirectPromptInjection_Telegram.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center} 
+\framebreak
+
+        \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.7\textheight,width=0.99\textwidth,keepaspectratio]{Figures/S1_NICS_IndirectPromptInjection_Details.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center} 
+
+\end{frame}
+
+
+\begin{frame}{情境一：實測結果對照}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.2cm}XX}
+		\toprule
+		 & \textbf{OpenClaw}（無防護） & \textbf{NemoClaw}（有網路隔離） \\
+		\midrule
+		結果 & \textcolor{red}{\textbf{失敗}} & \textcolor{green!60!black}{\textbf{成功防禦}} \\
+		\midrule
+		說明 &
+		成功遭間接提示詞注入，執行檔案讀寫與刪除，並將機敏憑證透過 GET 請求外洩至攻擊者伺服器 &
+		OpenShell 白名單政策攔截對未授權端點的連線請求，阻斷外洩路徑，並列入待審清單提醒人工審核 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	\begin{itemize}
+		\item \textbf{關鍵啟示：}網路層隔離能有效切斷資料外洩的出口，即使 Agent 已受注入指令操控，攻擊者仍無法接收竊取的資料
+		\item 此情境與企業版 Coding Agent 使用場景高度相關——開發者日常讀取外部文件與網頁，面臨同等暴露面
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{業界案例：OpenClaw 社交工程攻擊}
+
+	\begin{block}{事件背景}
+		資安公司 Varonis 研究員示範，對 OpenClaw 發送偽裝成主管的緊急業務請求，Agent 主動將 AWS IAM 金鑰與 CRM 客戶資料（含合約、收入數據）寄出，即使啟用「嚴格模式」安全設定仍失敗\cite{varonis2026}。
+	\end{block}
+
+	\begin{itemize}
+		\item \textbf{攻擊向量：}偽裝成合法業務請求的社交工程，Agent無法驗證寄件者身份
+		\item \textbf{攻擊結果：}雲端憑證與客戶個資外洩，攻擊者取得 AWS 存取權限
+		\item \textbf{根本原因：}「請求看起來像正常業務需求」就足以繞過安全設定，提示詞層面的守則無法對抗情境壓力
+		\item \textbf{與 NICS 情境一的關聯：}攻擊向量一致（外部內容操控 Agent 行為），Varonis 案例進一步確認威脅是存在的
+	\end{itemize}
+
+	{\small\textcolor{gray}{企業啟示：不只是網頁注入，任何看似合法的外部輸入都是潛在攻擊面。}}
+
+    %\framebreak 
+
+    \WebLinkURLBox{OpenClaw AI Agent Found Falling for Phishing Attacks, Spills User Data}{https://www.bleepingcomputer.com/news/security/openclaw-ai-agent-found-falling-for-phishing-attacks-spills-user-data/}
+
+    
+
+
+\end{frame}
+
+
+\subsection{情境二：第三方技能包藏惡意程式}
+
+\begin{frame}[allowframebreaks=0.85]{情境二：威脅說明}
+
+	\begin{itemize}
+		\item \textbf{威脅類型：}供應鏈攻擊(Supply Chain Attack)
+
+		\item \textbf{攻擊前提：}AI Agent 支援安裝第三方「技能(Skill)」擴充包。攻擊者可將惡意行為指令寫入技能包，偽裝成正常功能上架，一旦安裝即植入後門
+
+        \item \textbf{情境描述：} Agent安裝名為\textbf{技能(Skill)}之擴充來執行\textbf{查詢天氣}。網路上已有開放平台供\textbf{使用者分享自製的擴充包}，攻擊者可將惡意行為指令寫入其中並偽裝成正常的技能上架，一旦安裝即被植入後門或惡意程式
+
+\framebreak
+
+        \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.7\textheight,width=0.99\textwidth,keepaspectratio]{Figures/S2_NICS_MaliciousSkill.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center} 
+
+        
+        \framebreak
+		\item \textbf{實測攻擊鏈：}
+			\begin{enumerate}
+				\item 使用者下載並安裝偽裝為天氣查詢功能的惡意技能包，安裝過程\alert{未觸發任何安全警告}
+				\item 使用者發起天氣查詢，惡意技能在背景\textbf{同時}執行兩項操作：
+					\begin{itemize}
+						\item 竊取 Gateway Auth Token 等機敏設定檔
+						\item 將機敏資訊外傳至攻擊者伺服器
+					\end{itemize}
+				\item 惡意技能正常回應天氣資訊，掩蓋異常行為，\alert{使用者無從察覺}
+				\item 攻擊者以竊取之 Token 成功登入 Gateway Dashboard，取得完整控制權
+			\end{enumerate}
+
+		\item 此情境同樣適用於 MCP(Model Context Protocol)伺服器生態系——\textbf{第三方 MCP 工具}面臨相同風險
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{情境二：實測結果對照}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.2cm}XX}
+		\toprule
+		 & \textbf{OpenClaw}（無防護） & \textbf{NemoClaw}（有網路隔離） \\
+		\midrule
+		結果 & \textcolor{red}{\textbf{失敗}} & \textcolor{green!60!black}{\textbf{成功防禦}} \\
+		\midrule
+		說明 &
+		惡意技能安裝與執行全程無安全警告，Auth Token 靜默外洩，攻擊者取得 Gateway 完整控制權 &
+		OpenShell 白名單政策攔截惡意技能對未授權端點的連線，外洩路徑被切斷，並觸發待審通知 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	\begin{itemize}
+		\item \textbf{關鍵啟示：}在無網路隔離的環境下，第三方技能包的惡意行為完全靜默，企業無法依賴使用者自行識別風險
+		\item 技能包的\textbf{審查機制缺失}是當前 AI Agent 生態系的系統性問題
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{業界案例：MCP 工具投毒與傳統供應鏈對比}
+
+	\begin{itemize}
+		\item \textbf{MCP Tool Poisoning（概念驗證，2025）：}Invariant Labs 研究員公開概念驗證，示範在 MCP Server 工具描述中嵌入隱藏指令，操控 AI Agent 讀取 SSH 私鑰並外傳，安裝過程\alert{未觸發任何告警}\cite{mcpPoC2024}
+
+		\item \textbf{類比：傳統軟體供應鏈攻擊}
+			\begin{itemize}
+				\item 2021 年 npm 生態系：超過 700 個惡意套件被發現，偽裝成熱門套件的「錯字仿冒」版本\cite{npm2021}
+				\item 2022 年 PyPI：惡意套件安裝時自動竊取環境變數與 API 金鑰\cite{pypi2022}
+				\item AI Agent 生態系面臨\textbf{相同的攻擊模式}，但審查機制更不成熟
+			\end{itemize}
+
+		\item \textbf{關鍵差異：}傳統套件投毒攻擊的是程式碼層；MCP/Skill 投毒攻擊的是\alert{指令層}，更難被靜態分析工具偵測
+	\end{itemize}
+
+
+\end{frame}
+
+
+\subsection{情境三：長時間運作導致安全守則遺失}
+
+\begin{frame}[allowframebreaks=0.85]{情境三：威脅說明}
+
+	\begin{itemize}
+		\item \textbf{威脅類型：}上下文操控攻擊(Context Manipulation)
+
+		\item \textbf{攻擊前提：}AI Agent 通常將安全守則寫入長期記憶檔（如 MEMORY.md）作為持久化約束。長期記憶檔容量有限，當大量一般資訊持續寫入時，安全守則可能遭覆蓋而失效
+
+        \item \textbf{情境描述：} AI代理工具能處理之資訊量有限，長時間運作後會自動壓縮早期內容以騰出空間。在此過程中，原本設定好的安全規則與權限設置可能被刪減，導致AI代理工具逐漸「忘記」哪些事不該做，產生失控行為
+
+        \framebreak
+       \begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.7\textheight,width=0.99\textwidth,keepaspectratio]{Figures/S3_NICS_LongTermMemory.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center} 
+        \framebreak
+
+
+		\item \textbf{實測攻擊鏈：}
+			\begin{enumerate}
+				\item Agent 正常運作期間，安全守則已寫入長期記憶檔 MEMORY.md
+				\item 攻擊者對 Agent 發送大量隨機問答，誘使 Agent 將問答資料彙整並存入 MEMORY.md
+				\item 大量問答資料\alert{覆蓋原有的安全守則}，約束條件從記憶中消失
+				\item 攻擊者以惡意提示詞誘使 Agent 產出違規內容，Agent\alert{無法拒絕}，因安全守則已不存在
+			\end{enumerate}
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{情境三：實測結果對照}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.2cm}XX}
+		\toprule
+		 & \textbf{OpenClaw}（無防護） & \textbf{NemoClaw}（有網路隔離） \\
+		\midrule
+		結果 & \textcolor{red}{\textbf{失敗}} & \textcolor{red}{\textbf{失敗}} \\
+		\midrule
+		說明 &
+        \multicolumn{2}{>{\raggedright\arraybackslash}p{\dimexpr\linewidth-1.2cm-4\tabcolsep\relax}}{兩者皆依賴可被覆蓋的長期記憶檔作為安全守則的儲存媒介，記憶遭覆蓋後安全守則同等失效。網路隔離機制對此情境完全無效}
+   \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	\begin{block}{業界已知的系統性問題}
+		此情境揭示的弱點並非特定產品缺陷，而是\textbf{當前 AI Agent 記憶架構的結構性問題}。只要安全守則依賴可被一般內容覆蓋的記憶機制，此類攻擊就難以從根本上消除。企業導入前應有清醒認知，並建立對應的監控與復原機制。
+	\end{block}
+
+\end{frame}
+
+
+\begin{frame}{業界研究：Many-shot Jailbreaking}
+
+	\begin{block}{研究背景}
+		Anthropic 於 2024 年發表研究，揭示長上下文模型（Long-context LLM）的系統性弱點：在 context 中填入大量「問題→有害回答」示例，模型會逐漸跟隨示例模式，繞過安全限制\cite{anthropic2024}。
+	\end{block}
+
+	\begin{itemize}
+		\item \textbf{攻擊原理：}用\textbf{數量壓制}模型的安全訓練——示例越多，安全限制越容易失效
+		\item \textbf{與情境三的關聯：}兩者的共同點是「大量內容填充使安全約束失效」，情境三透過記憶檔、此研究透過 context window
+		\item \textbf{重要性：}\alert{這是模型供應商自己發現並公開的問題}——顯示此類風險不是理論，業界正在積極應對但尚無完整解法
+		\item 長上下文模型（如 Claude、GPT-4o）的 context window 可達數十萬 token，攻擊空間更大
+	\end{itemize}
+
+
+\end{frame}
+
+
+\subsection{情境四：Agent自身行為風險}
+
+\begin{frame}{情境四：沒攻擊者Agent也能傷害你}
+
+	\begin{block}{與前三個情境的關鍵差異}
+		情境一至三都需要\textbf{外部攻擊者主動介入}。過度代理(Excessive Agency)是設計層面的問題，即使沒有攻擊，一個被賦予過多能力或權限的 Agent，也可能在正常使用中造成嚴重損害。
+	\end{block}
+
+	\begin{itemize}
+		\item \textbf{過度功能：}Agent 擁有超出任務需求的工具。客服 Agent 不需要刪除資料庫紀錄，但如果有這個能力，誤判就可能觸發
+		\item \textbf{過度權限：}Agent 以管理員身份執行，但任務只需要唯讀存取
+		\item \textbf{過度自主：}Agent 可不經人工確認，自主執行部署程式碼、發送大量 Email 等高影響力操作
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{過度代理：自動化放大錯誤的邊界}
+
+	\begin{itemize}
+		\item \textbf{傳統軟體的錯誤：}影響範圍有限，通常只影響當下的單筆操作
+
+		\item \textbf{AI Agent 的錯誤：}沒有邊界，提示詞誤用可能造成：
+			\begin{itemize}
+				\item 數千筆客戶資料被刪除（「整理一下過期資料」）
+				\item 數百封內容錯誤的 Email 被寄出（「通知所有用戶」）
+				\item 有問題的程式碼被直接部署到生產環境
+			\end{itemize}
+
+		\item \textbf{防護對策}（對應我們後面分層防護的第一、三層）：
+			\begin{itemize}
+				\item \textbf{最小權限原則：}只給 Agent 完成任務最低限度所需的工具與權限
+				\item \textbf{人機協作（HITL）：}高影響力操作執行前強制人工確認
+				\item \textbf{操作範圍白名單：}明確定義 Agent 能存取的路徑與能執行的指令
+			\end{itemize}
+	\end{itemize}
+
+	\vspace{0.2em}
+	{\scriptsize\textcolor{gray}{對應 OWASP Top 10 for LLM Applications (2025)：LLM06 Excessive Agency}}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{業界案例：OpenClaw收件匣刪除事件}
+
+	\begin{block}{事件經過}
+		Meta AI 安全研究員 Summer Yu 指示 OpenClaw 整理電子郵件收件匣，Agent 隨即進入高速刪除模式。她多次發送停止指令均無效，最後必須親自跑去手動斷電才終止\cite{summeryu2026}。
+	\end{block}
+\WebLinkURLBox{A Meta AI security researcher said an OpenClaw agent ran amok on her inbox}{https://techcrunch.com/2026/02/23/a-meta-ai-security-researcher-said-an-openclaw-agent-ran-amok-on-her-inbox/}
+
+
+
+	\begin{itemize}
+		\item \textbf{根本原因：}Agent 的 context window 被大量郵件塞滿，開始壓縮與摘要時誤將停止指令忽略
+		\item \textbf{關鍵啟示：}
+			\begin{itemize}
+				\item 即使是 AI 安全專家也無法即時阻止失控的 Agent
+				\item \alert{提示詞層面的停止指令不是可靠的安全機制}，需要系統層面的緊急停用
+			\end{itemize}
+		\item \textbf{與過度代理的關聯：}這不是攻擊，是\textbf{正常使用下的設計缺陷：}Agent 被賦予刪除郵件的能力，誤判後便無邊界執行
+	\end{itemize}
+
+	\vspace{0.2em}
+	{\small\textcolor{gray}{企業啟示：「整理一下資料」這類模糊指令對高權限 Agent 而言潛藏巨大風險。}}
+
+\end{frame}
+
+
+%----------------------------------------------------------------------
+\section{技術隔離的效果與侷限}
+
+\subsection{AI的可信任性}
+
+\begin{frame}[allowframebreaks]{AI的可信任性(Trustworthiness)\cite{ISO22989:2022}}
+	\label{AITrustworthiness}
+	\begin{itemize}
+		\item \textbf{AI的穩健性(AI Robustness)}
+		\begin{itemize}
+			\item 指其能夠在各種情況下\textbf{維持開發者所預期的效能水準}
+			%\item 例如：即使在外部或嚴苛的環境條件下仍能在可接受範圍內運作的能力
+			%穩健性亦涵蓋如復原力(Resilience)與可靠性(Reliability)等特性。AI 系統的適當運作與其利害關係人的安全可能有直接關聯（見 ISO/IEC TR 24028）
+		\end{itemize}
+		
+		\item \textbf{AI 的可靠性(AI Reliability)}
+		\begin{itemize}
+			%\item 可靠性是指系統或系統內部單元在特定條件下，\textbf{於特定期間內執行其所需功能的能力}
+			
+			\item 指其在運行階段能穩定正確地提供預測(Prediction)、建議(Recommendation)與決策(Decision)的能力
+			
+			%\item 可靠性受 AI 系統的穩健性(Robustness)、泛化能力(Generalizability)、一致性(Consistency)與韌性(Resilience)等影響
+			
+		\end{itemize}
+		
+		%\framebreak
+		\item \textbf{AI 的韌性(AI Resilience)}
+		\begin{itemize}
+			\item 指系統在發生事件後，能快速恢復至可運作狀態的能力
+			%容錯性(Fault Tolerance)則指當系統內部發生中斷(Disruption)、錯誤(Fault)或故障(Failure)時，仍能運作(雖可能效能下降)
+			
+			%\item AI 系統如同其他軟體系統，也可能因硬體故障影響演算法正確執行
+			
+			%\item 可靠性(Reliability)與韌性相關，但其服務水準與期望不同，韌性的要求可能較低，視利害關係人而定。具韌性的系統可在失效情況下提供降級後的運作，並需包含必要的回復機制
+		\end{itemize}
+		
+		\item \textbf{AI 可控性(AI Controllability)}
+		\begin{itemize}
+			\item 指AI系統允許外部代理者介入其運作的特性
+			%\item 可控性可透過建立可靠的機制讓代理者\footnote{代理者如服務提供者、產品供應商、AI 模組供應者、使用者、監管機構等等}接管系統控制來實現
+			%\item 關鍵在於決定哪些代理者能控制哪些 AI 系統的元件
+			% 詳情請見 ISO/IEC TR 24028:2020 第 10.4 節
+		\end{itemize}
+		
+		%\framebreak
+		\item \textbf{AI 可解釋性(AI Explainability)}
+		\begin{itemize}
+			\item 指 AI 系統所作決策中重要的影響因子能以人類可理解的方式表達
+			%\item 當 AI 系統的決策對人類產生影響時，可解釋性尤其重要，否則人們易對結果感到不信任
+			
+			%即便決策未直接影響人類，可解釋性仍有助於系統驗證。例如：AI 系統分析場景圖片辨識物件時，若能提供其判斷依據，有助於確認結果正確性。歷史上曾發生過某些 AI 系統基於資料中不當關聯性進行錯誤判斷的情況。
+			
+			%\item 某些AI 系統類型的可解釋性較高，如決策樹等基於規則的演算法，但當模型規模複雜化後，也可能變得難以理解
+			%深度學習（deep learning）神經網路則常因其複雜性而難以提供有意義的解釋。
+		\end{itemize}
+		\framebreak
+		\item \textbf{AI 可預測性(AI Predictability)}
+		\begin{itemize}
+			\item 指AI系統能讓利害關係人對其輸出有可靠預期的特性
+			
+			%\item 若使用者無法預期系統在明顯情境下的行為，將喪失對系統的信任
+			
+			%\item 可預測性與準確性(Accuracy)有關，提升準確性的方法可減少\textbf{非預期輸出}的機會
+			%將可預測性簡化為「人類應能預測 AI 行為」的觀點有問題，原因如下：
+			%— 以人類理解為基礎的定義過於主觀，應以客觀、可量化標準定義可預測性；
+			%— 即使無法預測其所有行為，也能建立信任。例如：透過統計保證其行為的合理性，這對許多機器學習方法來說更實際，因其結果本質上具有不確定性。				
+		\end{itemize}
+		
+		%\framebreak
+		\item \textbf{AI 透明度(AI Transparency)}
+		\begin{itemize}
+			%\item AI 系統的透明度有助於實現以人為中心的目標
+			\item 透明性涉及將 AI 系統的相關資訊(如：目標、限制、設計選擇、假設、功能、模型、演算法、訓練方法、品質保證流程等)揭露給利害關係人
+			
+			%\item 透明性還包括向利害關係人說明資料的使用細節(如：收集目的、時間、地點、方式等)、個資保護情況、系統設計與部署方式、決策處理流程與自動化程度
+			
+			%注意：某些為了達成透明性而揭露的資訊，可能會與安全性、隱私或機密性要求相衝突。
+		\end{itemize}
+		
+		\item \textbf{AI 偏誤與公平性(AI Bias and Fairness)}
+		\begin{itemize}
+			%\item 系統對不同情境做出差異化處理的能力，這是機器學習必要的判斷與適應機制
+			
+			\item \textbf{偏誤}常帶有\textbf{不公平}的意思，AI 領域常以\textbf{不公平性(Unfairness)}來指稱那些無正當理由造成某些群體受益的差別待遇
+			
+			%AI 系統若有不公平的行為，可能違背既有事實、信念與社會規範，導致偏袒或歧視。某些偏誤是 AI 系統正常運作所需，但不受控的偏誤則可能不自覺地導入系統中，造成不公平結果
+			
+			% \item 偏誤可能來自人類的\textbf{認知偏誤}、\textbf{資料偏誤}與\textbf{工程設計}決策等
+			% 	\begin{itemize}
+				% 		\item 訓練資料的偏誤是 AI 系統偏誤的主要來源
+				% 		\item 人類的偏誤會影響資料蒐集、系統設計、模型訓練等各開發階段的決策
+				% 	\end{itemize}
+			
+			%儘管減少 AI 系統中不必要的偏誤極具挑戰，但仍可透過偵測與處理方式改善（參見 ISO/IEC TR 24027:2021）。
+		\end{itemize}
+	\end{itemize}
+	
+\end{frame}
+
+\subsection{OWASP LLM Top 10}
+
+\begin{frame}{OWASP Top 10 for LLM Applications（2025）}
+
+	\begin{block}{什麼是 OWASP LLM Top 10？}
+		OWASP（開放網路應用安全計畫）整理的 LLM 應用十大資安風險清單\cite{owasp2025}，為業界最廣泛引用的 AI 安全參考框架。
+	\end{block}
+
+	{\small\renewcommand{\arraystretch}{1.15}
+	\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.0cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.0cm}>{\raggedright\arraybackslash}X}
+		\toprule
+		編號 & 風險名稱 & 編號 & 風險名稱 \\
+		\midrule
+		\textcolor{green!60!black}{\textbf{LLM01}} & \textcolor{green!60!black}{\textbf{提示注入}} & \textcolor{green!60!black}{\textbf{LLM06}} & \textcolor{green!60!black}{\textbf{過度代理}} \\
+		LLM02 & 敏感資訊洩漏 & LLM07 & 系統提示洩漏\ \\
+		\textcolor{green!60!black}{\textbf{LLM03}} & \textcolor{green!60!black}{\textbf{供應鏈}} & LLM08 & 向量與嵌入弱點 \\
+		LLM04 & 資料與模型投毒 & LLM09 & 錯誤資訊\ \\
+		LLM05 & 不當輸出處理 & LLM10 & 無限消耗 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.2em}
+	{\small \textcolor{green!60!black}{綠色標示}（LLM01、LLM03、LLM06）為本報告重點分析項目。}
+
+
+\end{frame}
+
+
+\begin{frame}{OWASP LLM Top10 與簡報的對應關係}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{1.0cm}>{\raggedright\arraybackslash}p{3.5cm}>{\raggedright\arraybackslash}X}
+		\toprule
+		編號 & 風險名稱 & 本報告對應分析 \\
+		\midrule
+		\textbf{LLM01} & 提示注入 & 情境一：外部網頁藏惡意指令；OpenClaw 社交工程案例 \\
+		\midrule
+		\textbf{LLM02} & 敏感資訊洩漏 & 風險全景圖：資料外洩；衝擊評估 \\
+		\midrule
+		\textbf{LLM03} & 供應鏈 & 情境二：第三方技能包藏惡意程式；MCP 工具投毒案例 \\
+		\midrule
+		\textbf{LLM06} & 過度代理 & 情境四：過度代理；分層防護第一、三層 \\
+		\midrule
+		\textbf{LLM09} & 錯誤資訊\ & 情境三延伸：安全守則失效後 Agent 產出有害內容 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.2em}
+	{\scriptsize\textcolor{gray}{OWASP 其餘項目與 AI Agent 部署情境關聯性較低，不展開討論。}}
+
+\end{frame}
+
+
+\subsection{防禦機制}
+
+\begin{frame}{五大防禦機制}
+
+	\begin{description}[\textbf{操作稽核日誌}]
+		\item[\textbf{網路出口隔離}] 限制 Agent 只能對外連線到授權端點，阻斷資料外洩路徑
+		\item[\textbf{第三方套件審查}] 對安裝的技能包、MCP 工具進行來源驗證與行為稽核，防止惡意套件植入
+		\item[\textbf{安全守則固化}] 將安全規則存入唯讀設定檔，避免被 Agent 一般記憶操作覆蓋
+		\item[\textbf{人機協作(HITL)}] 高風險操作（刪檔、對外發訊、API 呼叫）須人工確認才執行
+		\item[\textbf{操作稽核日誌}] 完整記錄 Agent 每步操作，送至集中式系統供事後審查與告警
+	\end{description}
+
+	\vspace{0.4em}
+	{\small 下頁矩陣顯示各機制對情境一至三（NICS 實測威脅）的覆蓋效果。}
+
+\end{frame}
+
+
+\begin{frame}{防禦機制與威脅情境對應}
+
+	{\small\renewcommand{\arraystretch}{1.2}
+	\begin{tabularx}{\linewidth}{Xp{1.6cm}p{1.6cm}p{1.6cm}}
+		\toprule
+		防禦機制 & 情境一 提示注入 & 情境二 供應鏈 & 情境三 Memory \\
+		\midrule
+		網路出口隔離 & \textcolor{green!60!black}{\textbf{有效}} & \textcolor{green!60!black}{\textbf{有效}} & \textcolor{red}{\textbf{無效}} \\
+		\midrule
+		第三方套件審查 & \textcolor{gray}{—} & \textcolor{green!60!black}{\textbf{源頭阻斷}} & \textcolor{gray}{—} \\
+		\midrule
+		安全守則固化 & \textcolor{gray}{—} & \textcolor{gray}{—} & \textcolor{orange!80!black}{\textbf{部分緩解}} \\
+		\midrule
+		人機協作(HITL) & \textcolor{orange!80!black}{\textbf{部分}} & \textcolor{orange!80!black}{\textbf{部分}} & \textcolor{orange!80!black}{\textbf{部分}} \\
+		\midrule
+		操作稽核日誌 & \textcolor{blue!60!black}{\textbf{事後偵測}} & \textcolor{blue!60!black}{\textbf{事後偵測}} & \textcolor{blue!60!black}{\textbf{事後偵測}} \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.2em}
+	\begin{itemize}
+		\item \textbf{NICS 實測驗證：}NemoClaw 網路隔離在情境一、二有效；情境三兩工具皆失敗——與此矩陣一致
+		\item \alert{沒有任何單一機制能覆蓋所有情境}——分層防護是唯一務實路徑
+	\end{itemize}
+	{\scriptsize\textcolor{gray}{來源：網路隔離欄位經 NICS 實測驗證\cite{nics2026}；其餘機制參考 OWASP Top 10 for LLM Applications 緩解建議\cite{owasp2025}。}}
+
+\end{frame}
+
+
+\subsection{衝擊評估}
+
+\begin{frame}{情境衝擊評估}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.6cm}Xp{3.2cm}}
+		\toprule
+		情境 & 直接衝擊 & 業務後果 \\
+		\midrule
+		\textbf{情境一} Prompt Injection &
+		機敏憑證與使用者身份外洩至攻擊者伺服器 &
+		生產系統遭接管；含個資則須啟動\textbf{資料外洩通報}程序 \\
+		\midrule
+		\textbf{情境二} Supply Chain &
+		Gateway Auth Token 完全遭竊，攻擊者取得基礎設施控制權 &
+		所有下游系統暴露；若為 SaaS 平台，\textbf{客戶資料全量受影響} \\
+		\midrule
+		\textbf{情境三} Memory Overwrite &
+		Agent 安全約束完全失效，可被誘導產出任意內容 &
+		AI 輸出內容\textbf{法律責任}；金融業觸發模型風險管理要求 \\
+		\midrule
+		\textbf{情境四} Excessive Agency &
+		Agent 誤判後無邊界執行，大量資料遭批次刪除或錯誤操作 &
+		資料永久損失；\textbf{察覺後也可能無法即時阻止}，需系統層面 Kill Switch \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	\begin{itemize}
+		\item 情境一至三共同點：\alert{使用者全程無從察覺}——損害在被發現前可能已持續數週
+		\item 情境四的特殊性：使用者\textbf{察覺後也可能無法停止}——需系統層面緊急停用機制，而非依賴提示詞指令
+	\end{itemize}
+
+\end{frame}
+
+
+%\subsection{核心論點}
+
+\begin{frame}[allowframebreaks=0.85]{技術隔離的定位}
+
+	\begin{itemize}
+		\item 技術隔離在 AI Agent 安全防護中的角色，類似傳統資安中的防火牆：
+			\begin{itemize}
+				\item 能有效阻斷\textbf{已知型態}的外洩管道
+				\item 能將\textbf{爆炸半徑(Blast Radius)}限縮在隔離環境內
+				\item 無法阻止 Agent \textbf{在沙盒內}被操控執行有害行動
+				\item 無法防禦\textbf{模型層}的行為偏差或記憶操控
+			\end{itemize}
+
+		\item 企業版 Coding Agent(Claude Code Enterprise/GitHub Copilot for Business)的安全模型以\textbf{防火牆規則}為主要控制手段，結構上與 NemoClaw 相似——因此同樣在情境三面臨相同的盲點
+
+		\item \textbf{結論：}技術隔離是企業導入 AI Agent 的\alert{必要基礎}，但企業需同時認知其防禦邊界，不應視隔離為全面保護
+	\end{itemize}
+
+\end{frame}
+
+
+%----------------------------------------------------------------------
+\section{分層防護建議}
+
+\begin{frame}{分層防護架構}
+
+	{\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.2cm}p{2.0cm}Xp{3.5cm}}
+		\toprule
+		層次 & 防護類型 & 目標 & 對應威脅 \\
+		\midrule
+		第一層 & \textbf{網路隔離與沙盒} & 切斷資料外洩出口，限縮爆炸半徑 & Prompt Injection \newline Supply Chain \\
+		\midrule
+		第二層 & \textbf{記憶與上下文保護} & 防止安全守則被覆蓋或竄改 & Memory Overwrite \\
+		\midrule
+		第三層 & \textbf{人機協作(HITL)} & 高風險操作強制人工審核 & 全部威脅類型 \\
+		\midrule
+		第四層 & \textbf{組織與治理} & 供應鏈審查、政策、稽核與應變 & 全部威脅類型 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	{\small 以下各層建議適用於所有 AI Agent 部署形態，包含企業自建代理工具與 Coding Agent。}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{第一層：網路隔離與沙盒}
+
+	{\scriptsize\textcolor{gray}{對應 OWASP LLM Top 10 (2025)：LLM01 提示注入、LLM06 過度代理}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{預設拒絕(Deny-by-default)網路政策}
+			\begin{itemize}
+				\item Agent 對外連線僅允許明確授權的白名單端點
+				\item 新增連線請求進入\textbf{待審佇列}，由人工確認後方可放行
+				\item 對接訊息平台停用 Link Preview 等自動 HTTP 請求機制，避免形成隱蔽外洩管道
+			\end{itemize}
+
+		\item \textbf{容器化隔離}
+			\begin{itemize}
+				\item Agent 執行環境與生產系統、機敏資料環境\alert{完全分離}
+				\item 機敏憑證、API 金鑰等\textbf{不以明文}儲存於 Agent 可存取的環境中
+				\item 正式環境勿以 local/bypass 模式啟動 Agent，該模式將使隔離機制失效
+			\end{itemize}
+
+        \framebreak
+		\item \textbf{最小權限原則}
+			\begin{itemize}
+				\item 以白名單管控 Agent 可存取的檔案路徑與可執行的指令
+				\item 存取憑證、執行系統指令或對外連線等高風險操作\textbf{強制啟用人工審核}
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{第二層：記憶與上下文保護}
+
+	{\scriptsize\textcolor{gray}{對應 OWASP LLM Top 10 (2025)：LLM01 提示注入}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item 針對情境三揭示的結構性弱點，目前尚無通用解法，以下方向可降低風險：
+
+		\item \textbf{安全守則的持久化保護}
+			\begin{itemize}
+				\item 將安全守則\textbf{與一般記憶資料分離儲存}，避免共用同一可覆蓋的記憶檔
+				\item 每次 Agent 啟動時\textbf{強制重新載入}安全守則，不依賴長期記憶的持久性
+				\item 安全守則應寫入\textbf{唯讀或受保護}的設定檔，而非開放給 Agent 自行修改的記憶檔
+			\end{itemize}
+
+        \framebreak
+		\item \textbf{記憶監控}
+			\begin{itemize}
+				\item 對 Agent 的記憶寫入操作建立稽核日誌
+				\item 偵測記憶檔中安全守則相關內容的異常變動或消失，發現異常立即觸發告警
+			\end{itemize}
+
+		\item \textbf{企業心理準備}：此為目前業界\alert{尚未完全解決的已知問題}，應以「風險接受並監控」而非「風險消除」的思維管理
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{第三層：人機協作 (Human-in-the-Loop)}
+
+	{\scriptsize\textcolor{gray}{對應 OWASP LLM Top 10 (2025)：LLM06 過度代理}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item 定義高風險動作清單，執行前強制人工確認：
+			\begin{itemize}
+				\item 刪除或覆寫檔案、對外發送訊息、呼叫涉及付款的 API、修改存取控制設定
+			\end{itemize}
+		\item 建立\textbf{緊急停用(Kill Switch)}機制，可快速下線特定 Agent
+		\item 定義自動觸發停用的異常行為條件（如短時間內大量檔案存取）
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{第四層：組織與治理}
+
+	{\scriptsize\textcolor{gray}{對應 OWASP LLM Top 10 (2025)：LLM03 供應鏈}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{供應鏈審查：}
+			\begin{itemize}
+				\item 僅允許安裝經審查與簽署的第三方技能包與 MCP 工具
+				\item 定期審查已安裝工具的行為，防範 Rug Pull 攻擊
+			\end{itemize}
+		\item \textbf{稽核與可見度：}完整記錄 Agent 操作日誌（輸入、工具呼叫、輸出），傳送至集中式 SIEM，不可由 Agent 自行修改
+		\item \textbf{AI 事件應變：}將 AI Agent 異常行為納入資安事件通報流程，定期進行紅隊演練
+	\end{itemize}
+
+\end{frame}
+
+
+%----------------------------------------------------------------------
+\section{風險緩解與治理}
+
+\subsection{廠商評估}
+
+\begin{frame}[allowframebreaks=0.85]{購買商業產品的評估清單}
+
+	{\scriptsize\textcolor{gray}{選擇 AI Agent 產品前，建議向廠商確認以下各項能力}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{網路隔離：}是否支援預設拒絕(Deny-by-default)白名單政策？Agent 能否限制只連線到授權端點？
+
+		\item \textbf{稽核日誌：}Agent 的完整操作紀錄能否匯出至企業自己的資安監控系統？\alert{日誌是否防止被 Agent 自行修改？}
+
+		\item \textbf{記憶機制：}安全守則如何儲存？是否與一般記憶資料分離？能否設定唯讀保護？
+
+		\framebreak
+		\item \textbf{第三方套件管控：}平台是否有套件審查機制？企業管理員能否禁止安裝未授權的 MCP 工具或 Skill？
+
+		\item \textbf{資料主權：}資料在哪個國家或地區的伺服器處理？是否支援地端部署（在公司自己的伺服器執行，不透過雲端）？
+
+		\item \textbf{事件應變：}是否有緊急停用(Kill Switch)機制？發生安全事件時，廠商的處理時間承諾（SLA，服務等級協議）是多少小時？
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{自行開發或部署的安全檢查清單}
+
+	{\scriptsize\textcolor{gray}{企業自建 AI Agent，或在地端部署開源 Agent 時的安全審查重點}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{執行身份權限：}Agent 使用的系統帳號是否只有最低必要權限？避免以管理員身份執行
+
+		\item \textbf{環境隔離：}Agent 是否運行在獨立容器（隔離的執行環境）中，與生產系統完全分離？
+
+		\item \textbf{憑證安全：}API 金鑰、資料庫密碼等敏感憑證，是否\alert{未以明文}存放在 Agent 可存取的路徑？
+
+		\framebreak
+		\item \textbf{安全守則保護：}安全規則是否寫入唯讀設定檔，而非可被 Agent 自行覆寫的記憶檔？
+
+		\item \textbf{操作稽核：}是否建立完整的 Agent 操作日誌，並傳送至 Agent 無法存取的集中儲存位置？
+
+		\item \textbf{高風險操作審核：}刪除檔案、對外發送資料、呼叫付款 API 等高風險動作，是否設有人工確認機制才能執行？
+	\end{itemize}
+
+\end{frame}
+
+
+\subsection{CLI、MCP 與 Skill 安全管理}
+
+\begin{frame}{CLI Agent 安全設定要點}
+
+	{\scriptsize\textcolor{gray}{對應 OWASP LLM Top 10 (2025)：LLM01 提示注入、LLM06 過度代理}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{指令白名單配置}
+			\begin{itemize}
+				\item 明確列出 Agent 允許執行的指令（如 \texttt{git}、\texttt{grep}、\texttt{python}），其餘一律拒絕
+				\item 禁止執行 \texttt{curl}、\texttt{wget} 等對外傳輸指令，除非明確授權
+				\item 禁止使用 \texttt{sudo} 或任何提權操作
+			\end{itemize}
+
+		\item \textbf{容器化與執行隔離}
+			\begin{itemize}
+				\item Agent 執行環境應容器化，與生產系統和機敏資料環境完全分離
+				\item 掛載的檔案路徑僅限工作目錄，不開放整個主機檔案系統
+				\item \alert{勿以 local/bypass 模式啟動}，該模式將使所有隔離機制失效
+			\end{itemize}
+
+		\item \textbf{執行身份最小化}
+			\begin{itemize}
+				\item Agent 使用的系統帳號應為專屬低權限帳號，不應與開發者個人帳號共用
+				\item API 金鑰與資料庫密碼不以明文存放於 Agent 可存取路徑，改用 Secret Manager 注入
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{安裝 MCP Server 前的評估要點}
+
+	{\scriptsize\textcolor{gray}{對應 OWASP LLM Top 10 (2025)：LLM03 供應鏈}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{來源可信度}
+			\begin{itemize}
+				\item 優先使用原廠官方 MCP Server (Anthropic / Microsoft / OpenAI)或可信賴的知名開源專案
+				\item 匿名開發者發布的工具，需\alert{完整閱讀開放原始碼}，無原始碼者原則上不安裝
+				\item 確認套件發布管道是否有版本簽署機制（避免更新時遭偷換）
+			\end{itemize}
+
+		\item \textbf{權限宣告審查}
+			\begin{itemize}
+				\item 要求 MCP Server 明確列出所需的系統存取範圍
+				\item 工具宣告的功能與實際需求的權限是否相符？「天氣查詢」不需要讀取本機檔案
+				\item 是否有對外連線行為？連線的目標端點是否合理？
+			\end{itemize}
+
+		\framebreak
+		\item \textbf{社群信譽確認}
+			\begin{itemize}
+				\item 查看下載量、Issue 回報紀錄、維護活躍程度
+				\item 近期是否有安全性問題回報？開發者的回應態度如何？
+			\end{itemize}
+
+		\item \textbf{沙盒測試}
+			\begin{itemize}
+				\item 首次安裝建議在\textbf{獨立測試環境}中運行，觀察實際網路連線行為與檔案存取行為
+				\item 確認行為符合預期後，再進入企業正式環境
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{Skill 套件安全審查}
+
+	\begin{itemize}
+		\item \textbf{為何 Skill 比 MCP Server 更難審查？}
+			\begin{itemize}
+				\item MCP Server 是程式碼，可靜態分析；Skill 的核心是\textbf{自然語言指令}，靜態分析工具無法辨識語義層的惡意內容
+				\item 惡意行為可能寫成「在完成正常任務後，同時執行...」的指令形式，外觀與正常指令相似
+			\end{itemize}
+
+		\item \textbf{安裝前審查方向}
+			\begin{itemize}
+				\item 完整閱讀 Skill 的全部指令內容，特別注意\alert{「同時」、「背景執行」、「在任何時機」}等觸發條件描述
+				\item 確認 Skill 宣告的觸發條件是否過於寬泛（如「每次對話都執行」）
+				\item 確認 Skill 是否嘗試存取或傳遞與功能無關的資料
+			\end{itemize}
+
+		\framebreak
+		\item \textbf{安裝後行為監控}
+			\begin{itemize}
+				\item 啟用稽核日誌，持續記錄 Skill 每次被觸發時實際執行的操作
+				\item 若發現 Skill 行為與宣告不符，立即停用並回報
+				\item 警惕\textbf{Rug Pull 攻擊}：套件初始版本正常，後續靜默更新植入惡意行為——需定期審查已安裝版本的更新內容
+			\end{itemize}
+
+		\item \textbf{企業建議：}非必要不安裝第三方 Skill，能以內部自建 Skill 替代者優先自建
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{企業 MCP/Skill 核准與治理流程}
+
+	{\scriptsize\textcolor{gray}{本流程建議基於 OWASP LLM03 供應鏈\cite{owasp2025}緩解建議設計}}\vspace{0.3em}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.8cm}p{2.2cm}X}
+		\toprule
+		流程階段 & 負責角色 & 主要行動 \\
+		\midrule
+		\textbf{申請} & 業務單位 & 提出使用需求，說明工具名稱、使用情境、預期存取範圍 \\
+		\midrule
+		\textbf{技術審查} & 資訊部門 & 來源驗證、原始碼或指令審閱、沙盒測試 \\
+		\midrule
+		\textbf{資安評估} & 資安部門 & 權限合理性確認、網路行為審查、OWASP LLM03 對照 \\
+		\midrule
+		\textbf{上線管控} & 資訊部門 & 加入企業白名單，限版本，記錄安裝範圍 \\
+		\midrule
+		\textbf{定期審查} & 資安部門 & 每季確認版本更新內容，行為日誌抽查 \\
+		\midrule
+		\textbf{下架} & 資安部門 & 發現異常或廠商失聯時，立即從白名單移除並通知使用者 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+\end{frame}
+
+
+\subsection{分階段導入}
+
+\begin{frame}{四階段導入框架}
+
+	{\scriptsize\textcolor{gray}{本框架建議基於 OWASP LLM Top 10\cite{owasp2025}緩解建議設計，僅供參考。}}\vspace{0.3em}
+
+	{\small\renewcommand{\arraystretch}{1.3}
+	\begin{tabularx}{\linewidth}{p{1.8cm}p{2.5cm}X}
+		\toprule
+		階段 & 名稱 & 目標與條件 \\
+		\midrule
+		\textbf{第一階段} & 評估與準備 & 釐清使用情境、完成風險評估、建立安全基線要求 \\
+		\midrule
+		\textbf{第二階段} & 受控試點 & 限定少數使用者、非生產環境、全程人工監控 \\
+		\midrule
+		\textbf{第三階段} & 受限擴展 & 擴大使用範圍，網路隔離與稽核日誌必須就緒 \\
+		\midrule
+		\textbf{第四階段} & 全面部署 & 分層防護完整到位，事件應變流程已建立 \\
+		\bottomrule
+	\end{tabularx}
+	}
+
+	\vspace{0.3em}
+	{\small 每個階段都應完成前一階段的安全要求，才能進入下一階段。}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{各階段安全要求細節}
+
+	\begin{itemize}
+		\item \textbf{第一階段：評估與準備}
+			\begin{itemize}
+				\item 盤點 Agent 將存取的資料類型與敏感程度
+				\item 確認適用的法規要求（個資法、金融業規範等）
+				\item 選定廠商並完成安全評估問卷
+			\end{itemize}
+
+		\item \textbf{第二階段：受控試點}
+			\begin{itemize}
+				\item 僅開放內部技術人員使用，不連接正式資料庫
+				\item 所有 Agent 操作由人工全程複審
+				\item 禁止安裝任何第三方 MCP 工具或 Skill
+			\end{itemize}
+
+		\framebreak
+		\item \textbf{第三階段：受限擴展}
+			\begin{itemize}
+				\item 網路隔離政策必須上線
+				\item 稽核日誌串接至集中監控系統
+				\item 定義並啟用高風險操作的人工審核清單
+				\item 第三方工具需經資安審查後方可安裝
+			\end{itemize}
+
+		\item \textbf{第四階段：全面部署}
+			\begin{itemize}
+				\item 分層防護四層全部到位
+				\item AI Agent 異常行為納入資安事件通報流程
+				\item 每季進行一次 AI Agent 安全審查
+				\item 建立緊急停用(Kill Switch)的啟動程序與演練計畫
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+
+\subsection{合規與治理}
+
+\begin{frame}[allowframebreaks=0.85]{合規考量：個人資料保護法}
+
+	\begin{itemize}
+		\item \textbf{觸發條件：}AI Agent 只要\textbf{讀取、處理或傳輸個人資料}，即受個資法規範
+			\begin{itemize}
+				\item 個人資料包含：姓名、Email、電話、身份證字號、IP 位址、消費紀錄等
+				\item Coding Agent 讀取含有客戶資料的程式碼或資料庫，同樣觸發
+			\end{itemize}
+
+		\item \textbf{企業義務：}
+			\begin{itemize}
+				\item 告知當事人資料被 AI 處理的目的與範圍
+				\item 確保 Agent 不將個資外傳至未授權的境外伺服器
+				\item \alert{資料外洩事件發生後 72 小時內通報主管機關}
+			\end{itemize}
+
+		\framebreak
+		\item \textbf{與 AI Agent 風險的連結：}
+			\begin{itemize}
+				\item 情境一、二的攻擊若導致個資外洩，直接觸發通報義務
+				\item Agent 稽核日誌本身也可能含有個資，需妥善管理
+			\end{itemize}
+
+		\item \textbf{實務建議：}明確定義 Agent 可存取的資料範圍，個資資料庫需額外設立存取控制
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{合規考量：金融業補充}
+
+	{\scriptsize\textcolor{gray}{適用對象：銀行、保險、證券、金融科技業}}\vspace{0.3em}
+
+	\begin{itemize}
+		\item \textbf{金融監督管理委員會(FSC)模型風險管理：}
+			\begin{itemize}
+				\item AI Agent 屬於「模型」範疇，需建立模型驗證與定期審查機制
+				\item 高風險決策（授信、核保、交易）不得完全由 AI Agent 自主執行
+				\item 模型行為需可解釋、可稽核
+			\end{itemize}
+
+		\item \textbf{內部控制要求：}
+			\begin{itemize}
+				\item Agent 的操作紀錄需符合金融業稽核保存年限要求
+				\item 存取客戶帳戶資料的 Agent 需通過額外的存取控制審查
+			\end{itemize}
+
+		\item \textbf{資安通報義務：}AI Agent 遭受攻擊或產生異常行為，可能觸發金融業資安事件通報規定
+	\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks=0.85]{企業內部 AI 治理政策要點}
+
+	\begin{itemize}
+		\item \textbf{使用政策：}
+			\begin{itemize}
+				\item 明確定義哪些部門、哪些角色可以使用 AI Agent
+				\item 規範 Agent 可處理的資料類型與敏感等級
+				\item 禁止使用個人帳號執行企業 Agent 任務
+			\end{itemize}
+
+		\item \textbf{工具管控：}
+			\begin{itemize}
+				\item 建立核准的 MCP 工具與 Skill 白名單
+				\item 新工具安裝需經資安審查流程
+			\end{itemize}
+
+		\framebreak
+		\item \textbf{異常通報流程：}
+			\begin{itemize}
+				\item 使用者發現 Agent 行為異常時的回報管道
+				\item 資安團隊接獲通報後的初步處理程序
+				\item 啟動緊急停用的授權層級與流程
+			\end{itemize}
+
+		\item \textbf{定期審查：}
+			\begin{itemize}
+				\item 每季審查已部署 Agent 的行為日誌
+				\item 每年進行一次 AI Agent 安全紅隊演練（模擬攻擊，測試防禦是否有效）
+				\item 定期更新 MCP 工具與 Skill 的核准清單
+			\end{itemize}
+	\end{itemize}
+
+\end{frame}
+
+\subsection{建構AI治理與管理}
+
+\begin{frame}[allowframebreaks]{透過標準化奠定AI信任基礎}
+	
+	\begin{itemize}
+		\item 透過實施正確的流程和控制措施來降低不確定性
+		
+		\item 透過展示 AI 的道德實踐來建立信任和可信度
+		
+		\item 因應陸續頒布的國際 AI 規範和道德義務期待，進行風險管理，符合監管要求
+		
+		\item 透過結構化方法整合 AI，提升營運績效
+		
+		\item 透過遵循國際認可的 AI 標準獲得市場競爭優勢
+		
+		\item 持續依據國際標準確保道德且負責任地使用 AI
+		
+	\end{itemize}
+	
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]{為什麼要參考標準?!}
+	
+	\begin{itemize}
+		\item 提供較務實的實作指引及要求
+			\begin{itemize}
+				\item 較研究及專利更為明確可靠
+			\end{itemize}
+		
+		\item 對於法規遵循的評估較有所本
+			\begin{itemize}
+				\item 因任務關係可能著重在標準的比對
+			\end{itemize}
+			
+		\item 多存在業界通用作法
+			\begin{itemize}
+				\item 實作指引幫助實務經驗的累積
+			\end{itemize}
+			
+		\item 機制具有較高的可維護性
+			\begin{itemize}
+				\item 可長可久，共同的希望，提供整合的機會
+			\end{itemize}
+		
+		
+	\end{itemize}
+	
+\end{frame}
+
+
+
+\begin{frame}[allowframebreaks]{AIMS的認驗證體系逐漸成熟\footnote{https://www.iso.org/standard/81230.html}}
+	
+\begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.7\textheight,width=0.9\textwidth,keepaspectratio]{Figures/ISO42001_Cover.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+	
+\end{frame}
+
+
+
+\begin{frame}[allowframebreaks]{\textbf{ISO/IEC 42001人工智慧管理系統}}
+	
+\begin{center}
+	\begin{tikzpicture}
+		\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.71\textheight,width=0.99\textwidth,keepaspectratio]{Figures/ISO42001_AIMS_PDCA.png}};
+		\begin{scope}[x={(image.south east)},y={(image.north west)}]
+			% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+			% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+			% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+			\iftoggle{figure_grid}{
+				\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+				\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+				\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+			}{}
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+	
+\end{frame}
+
+\begin{frame}[allowframebreaks]{AI風險管理--在組織面跟系統面}
+	
+	\begin{center}
+		\begin{tikzpicture}
+			\node[anchor=south west,inner sep=0] (image) at (0,0) {\includegraphics[height=0.79\textheight,width=0.99\textwidth,keepaspectratio]{Figures/AI_RiskManagement.png}};
+			\begin{scope}[x={(image.south east)},y={(image.north west)}]
+				% \node[draw,red] at (0.25,0.9) {\scriptsize{Impute後}};
+				% \draw[red,ultra thick,rounded corners] (0.00,0.44) rectangle (0.95,0.12);
+				% \draw<2>[red,ultra thick,rounded corners] (0.00,0.75) rectangle (1,0.08);
+				\iftoggle{figure_grid}{
+					\draw[help lines,xstep=.1,ystep=.1] (0,0) grid (1,1);
+					\foreach \x in {0,1,...,9} { \node [anchor=north] at (\x/10,0) {\scriptsize{0.\x}}; }
+					\foreach \y in {0,1,...,9} { \node [anchor=east] at (0,\y/10) {\scriptsize{0.\y}}; }
+				}{}
+			\end{scope}
+		\end{tikzpicture}
+	\end{center}
+	
+\end{frame}
+
+
+
+%----------------------------------------------------------------------
+\section{結論與建議}
+
+\begin{frame}[allowframebreaks=0.85]{結論與建議}
+
+	\begin{block}{威脅是真實且多面的}
+		AI Agent 的資安風險已有具體實測數據（NICS）、業界案例（OpenClaw 社交工程攻擊、MCP 工具投毒、收件匣刪除事件）與系統性框架（OWASP LLM Top 10）佐證。值得注意的是，部分風險——如過度代理——\textbf{不需要攻擊者介入}，設計不當的 Agent 本身即是威脅來源。
+	\end{block}
+
+	\begin{block}{技術隔離是起點，不是終點}
+		網路層隔離能有效防禦涉及對外傳輸的攻擊，是企業導入 AI Agent 的必要基礎。但記憶覆蓋與過度代理的案例提醒我們：\textbf{部分風險源自 Agent 的設計與架構本身}，任何單一防護機制都無法完全覆蓋，分層防護是唯一務實路徑。
+	\end{block}
+
+	\begin{block}{導入是過程，不是開關}
+		企業不應等待完整解法才行動，也不應在毫無準備的情況下全面部署。\textbf{分階段導入、逐步建立分層防護、從治理框架著手}，是在風險可控的前提下取得 AI Agent 效益的可行路徑。
+	\end{block}
+
+\end{frame}
+
+
+%----------------------------------------------------------------------
+\appendix
+
+\begin{frame}[allowframebreaks]{參考資料}
+
+	\printbibliography[heading=none]
+
+\end{frame}
+
+
+\end{document}
