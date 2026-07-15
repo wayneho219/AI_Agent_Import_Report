@@ -7,10 +7,13 @@ services:
     environment:
       # Required for local/LAN Ollama hosts (any value works)
       - OLLAMA_API_KEY=ollama-local
+      # Point directly to config file (avoids HOME path ambiguity in the container)
+      - OPENCLAW_CONFIG_PATH=/config/openclaw.json
+      # Gateway auth token (required when binding to non-loopback address in container)
+      - OPENCLAW_GATEWAY_TOKEN=demo-token-lab
     volumes:
       - ./openclaw-workspace:/workspace
-      # Pre-configured openclaw.json sets models.providers.ollama.baseUrl → http://host.docker.internal:11434
-      - ./openclaw-config:/root/.config/openclaw
+      - ./openclaw-config/openclaw.json:/config/openclaw.json:ro
     tty: true
     stdin_open: true
 
