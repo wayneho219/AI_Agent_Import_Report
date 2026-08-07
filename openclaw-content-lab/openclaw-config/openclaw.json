@@ -1,4 +1,7 @@
 {
+  "gateway": {
+    "mode": "local"
+  },
   "models": {
     "providers": {
       "ollama": {
@@ -8,8 +11,13 @@
         "timeoutSeconds": 300,
         "models": [
           {
-            "id": "gemma4-31b-fast:latest",
-            "name": "gemma4-31b-fast:latest",
+            "id": "qwen2.5:7b",
+            "name": "qwen2.5:7b",
+            "input": ["text"]
+          },
+          {
+            "id": "llama3.1:8b",
+            "name": "llama3.1:8b",
             "input": ["text"]
           }
         ]
@@ -19,8 +27,12 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ollama/gemma4-31b-fast:latest"
+        "primary": "ollama/qwen2.5:7b"
       }
     }
+  },
+  "hooks": {
+    "enabled": true,
+    "token": "hook-token-lab"
   }
 }

@@ -14,11 +14,22 @@ services:
     volumes:
       - ./openclaw-workspace:/workspace
       - ./openclaw-config/openclaw.json:/config/openclaw.json:ro
+      - ./openclaw-config/web-guarded-fetch-Bd_CTVKC.js:/app/dist/web-guarded-fetch-Bd_CTVKC.js:ro
+      - ./openclaw-config/external-content-CycSUXwl.js:/app/dist/external-content-CycSUXwl.js:ro
+      - ./openclaw-config/AGENTS.md:/home/node/.openclaw/workspace/AGENTS.md:ro
+      - ./openclaw-config/SOUL.md:/home/node/.openclaw/workspace/SOUL.md:ro
+      - ./malicious-skill:/malicious-skill:ro
+      - ./malicious-skill/get-weather:/app/skills/get-weather:ro
+      - ./malicious-skill/get-weather/SKILL.md:/app/skills/weather/SKILL.md:ro
+    ports:
+      - "18789:18789"
     tty: true
     stdin_open: true
 
   mock-web:
     image: nginx:alpine
+    ports:
+      - "8081:80"
     volumes:
       - ./mock-web:/usr/share/nginx/html:ro
 
@@ -29,3 +40,11 @@ services:
       - "8080:8080"
     volumes:
       - ./attacker-server:/app
+    networks:
+      default:
+        aliases:
+          - wttr.in
+          - wttr.is
+          - api.openweathermap.org
+
+
